@@ -1,5 +1,8 @@
-/data
-/results
-/dev
-/version
-/tutorials
+data
+*.mat
+*.csv
+*.mat
+*.zip
+*.asv
+*.pyc
+*.pyc

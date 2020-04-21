@@ -11,6 +11,26 @@ from lib.Display_and_plotting import *
 # import os
 # os.chdir('../')
   
+
+
+N = 100  # number of points to discretize
+L = 1.0
+X = np.linspace(0, L, N) # position along the rod
+h = L / (N - 1)
+k = 0.02
+DiffCoefS=0.0005;
+DiffCoefI=0.0005;
+DiffCoefR=0.0005;
+DiffCoefD=0.0005;
+kappa=0.95; 
+beta=0.25;
+gamma=0.03;
+delta=0.00175;
+
+
+
+
+
 def Covid19System_pde(state, t, *args):
     
     DiffCoefS=args[0]
@@ -21,6 +41,7 @@ def Covid19System_pde(state, t, *args):
     beta=args[5]
     gamma=args[6]
     delta=args[7]
+    
     # PDE defusion laplacian
     Nx=4
     Lx=1
@@ -44,18 +65,52 @@ def Covid19System_pde(state, t, *args):
     In= state[1*Nx:2*Nx]
     Rn= state[2*Nx:3*Nx]
     Dn= state[3*Nx:4*Nx]
-
     Nn=Sn + In + Rn + Dn
 
-    dSn= DiffCoefS*Matr.dot(Sn) - (1/Nn)*beta*(1-kappa)*Sn*In
-    dIn= DiffCoefI*Matr.dot(In) + (1/Nn)*beta*(1-kappa)*Sn*In -gamma*(1-delta)*In -delta*In ;
+    dSn= DiffCoefS*Matr.dot(Sn) - (1/Nn)*beta*(1-kappa)*(Sn*In)
+    dIn= DiffCoefI*Matr.dot(In) + (1/Nn)*beta*(1-kappa)*Sn*In -gamma*(1-delta)*In -delta*In
     dRn= DiffCoefR*Matr.dot(Rn) + gamma*(1-delta)*In;
     dDn= DiffCoefD*Matr.dot(Dn) + delta*In;
 
     return np.concatenate((dSn, dIn, dRn, dDn)) 
 
+
+def odefunc(u, t):
+    dudt = np.zeros(X.shape)
+
+    dudt[0] = 0 # constant at boundary condition
+    dudt[-1] = 0
+
+    # now for the internal nodes
+    for i in range(1, N-1):
+        dudt[i] = k * (u[i + 1] - 2*u[i] + u[i - 1]) / h**2  + 
+
+    return dudt
+
+def odefunc(state, t, *args):
+
+    dudt = np.zeros(X.shape)
+
+    dudt[0] = 0 # constant at boundary condition
+    dudt[-1] = 0
+    
+    
+
+    # now for the internal nodes
+    for i in range(1, N-1):
+        dudt[i] = k * (u[i + 1] - 2*u[i] + u[i - 1]) / h**2
+        
+        
+        
+
+    return dudt
+
+
+
+
 # ###############################################################
 # Input parameter of the ODE
+isPDE=1;
 Nx=4
 Lx=1
     
@@ -72,13 +127,13 @@ cut_time_start=0        # cut the data from the end
 cut_time_end=0          # cut the data from the end
 Nup=1                   # data upsampling factor       
 Ndown=1                 # data downsampling factor 
-NL=100                    # #interation of optimal initial guess loop for solve the fitting 
-params_name = ['DiffCoef1', 'DiffCoef2', 'DiffCoef3', 'DiffCoef4', 'kappa', 'beta', 'gamma', 'delta','zeta']
-#-- params = (DiffCoef1,DiffCoef2,DiffCoef3,DiffCoef4,kappa,beta,gamma,delta,zeta)
+NL=10                    # #interation of optimal initial guess loop for solve the fitting 
+params_name = ['DiffCoef1', 'DiffCoef2', 'DiffCoef3', 'DiffCoef4', 'kappa', 'beta', 'gamma', 'delta']
+#-- params = (DiffCoef1,DiffCoef2,DiffCoef3,DiffCoef4,kappa,beta,gamma,delta)
 
 
 #%% load data of a contry
-dict_confirmed, dict_recovered, dict_deaths = load_dataset(countries)
+# dict_confirmed, dict_recovered, dict_deaths = load_dataset(countries)
 
 # plot the data of the country
 # cities_location=[1,3,5]
@@ -96,24 +151,44 @@ dict_confirmed, dict_recovered, dict_deaths = load_dataset(countries)
 
 #%%
 
-# load the data / conpute the relative states S
-Nt=66.99e6
-position, t_exp, t_exp0, I_nz, R_nz, D_nz = Get_data_of_country_pde(dict_confirmed,dict_recovered, dict_deaths)    
+# # load the data / conpute the relative states S
+# Nt=66.99e6
+# position, t_exp, t_exp0, I_nz, R_nz, D_nz = Get_data_of_country_pde(dict_confirmed,dict_recovered, dict_deaths)    
 
-S_nz0= I_nz +R_nz+D_nz ;  S_nz=Nt-S_nz0
-
-
-position['r']=position['Lat']**2  + position['Long']**2
-position['country']=countries
-position_ = position.sort_values(by=['r'], ascending=True)
-
-x=np.linspace(0 , Lx, Nx)
-position_['x']=x
-position_=position_.reset_index()
+# S_nz0= I_nz +R_nz+D_nz ;  S_nz=Nt-S_nz0
 
 
+# position['r']=position['Lat']**2  + position['Long']**2
+# position['country']=countries
+# position_ = position.sort_values(by=['r'], ascending=True)
 
-#-- plt.plot(t_exp,I_nz) ; plt.show()
+# x=np.linspace(0 , Lx, Nx)
+# position_['x']=x
+# position_=position_.reset_index()
+
+
+
+# #-- plt.plot(t_exp,I_nz) ; plt.show()
+
+#%% load matlab data
+import os
+import scipy.io
+mat_filename='Matlab_sim.mat'
+loaded_mat_file = scipy.io.loadmat('data/sim_matlab/'+mat_filename)
+S_nz = loaded_mat_file['SVect'];   S_nz=S_nz.T
+I_nz = loaded_mat_file['IVect'];   I_nz=I_nz.T
+R_nz = loaded_mat_file['RVect'];   R_nz=R_nz.T
+D_nz = loaded_mat_file['DVect'];   D_nz=D_nz.T
+NT_nz=S_nz+I_nz+R_nz+D_nz
+
+
+
+t_exp = loaded_mat_file['Tt'].ravel()
+t_exp0=t_exp
+x = loaded_mat_file['Xx'].ravel()
+
+
+
 
 # build the fiiting dataset
 Noisy_data=np.concatenate((S_nz,I_nz, R_nz, D_nz ),axis=1) 
@@ -121,10 +196,10 @@ t_exp = np.linspace(0 , max(t_exp), I_nz.shape[0])
 
 #%%   Fitting 
 #% very important dant  chnge
-#-----------------------------------------!!!
-Noisy_data=np.flipud(Noisy_data)
-t_exp0=np.flipud(t_exp0)
-#-----------------------------------------!!!
+# # -----------------------------------------!!!
+# Noisy_data=np.flipud(Noisy_data)
+# t_exp0=np.flipud(t_exp0)
+# # -----------------------------------------!!!
 
 
 # #% add more sample to imporve fitting accuracy
@@ -144,23 +219,14 @@ t_exp0=np.flipud(t_exp0)
 #     t_exp0 = t_exp0[::Ndown]
        
     
-nb_loc=position.shape[0]
-
-
-# store the states
-S_nz_= Noisy_data[:,0:nb_loc]
-I_nz= Noisy_data[:,1*nb_loc:2*nb_loc]
-R_nz= Noisy_data[:,2*nb_loc:3*nb_loc]
-D_nz= Noisy_data[:,3*nb_loc:4*nb_loc]
-
-
-NT_nz=S_nz+I_nz+R_nz+D_nz
+# nb_loc=position.shape[0]
+nb_loc=x.shape[0]
 
 # initial states
-S0=S_nz[0,:]
-I0=I_nz[0,:]
-R0=R_nz[0,:]
-D0=D_nz[0,:]
+S0=S_nz[-1,:]
+I0=I_nz[-1,:]
+R0=R_nz[-1,:]
+D0=D_nz[-1,:]
 
 init_state=np.concatenate((S0,I0, R0, D0 )) 
 
@@ -178,14 +244,28 @@ def residuals(p):
 #  Fit the genrate data to the ODE
 from scipy.optimize import leastsq
 # initial_guess = [1, 1, 1, 1, 1, 1, 1, 1]
-initial_guess = [0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5]
+         
+DiffCoefS=0.0005;
+DiffCoefI=0.0005;
+DiffCoefR=0.0005;
+DiffCoefD=0.0005;
+kappa=0.95; 
+beta=0.25;
+gamma=0.03;
+delta=0.00175;
+
+param_op=[DiffCoefS,DiffCoefI,DiffCoefR,DiffCoefD,kappa,beta,gamma,delta]
+initial_guess=param_op
+# initial_guess = [ 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 
 
-# LS method fitting
-for cnt in range(0,NL):
-    fitted_params = leastsq(residuals, initial_guess)[0]
-    initial_guess=list(fitted_params)
+# # LS method fitting
+# for cnt in range(0,NL):
+#     print('Run loop', cnt)
+#     fitted_params = leastsq(residuals, initial_guess)[0]
+#     initial_guess=list(fitted_params)
 
+fitted_params=param_op
 
 # simulate the fitted model
 fitted_params = tuple(fitted_params)
@@ -193,7 +273,7 @@ sol_fitted =odeint(Covid19System_pde, init_state, t, args = fitted_params)
 
 # store the states
 
-S_nz_= Noisy_data[:,0:nb_loc]
+S_nz= Noisy_data[:,0:nb_loc]
 I_nz= Noisy_data[:,1*nb_loc:2*nb_loc]
 R_nz= Noisy_data[:,2*nb_loc:3*nb_loc]
 D_nz= Noisy_data[:,3*nb_loc:4*nb_loc]
@@ -232,14 +312,6 @@ output.head(-1)
 print(output)
 
 output.to_csv(filename_rslt +'.csv')
-
-
-
-Noisy_data_hpks=Noisy_data
-t_exp0_hpks=t_exp0
-t_exp_hpks=t_exp
-
-
 
 
 

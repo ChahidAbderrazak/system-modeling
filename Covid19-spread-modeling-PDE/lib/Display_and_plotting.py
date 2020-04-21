@@ -104,6 +104,74 @@ def plot_data_of_country(country, dict_confirmed, dict_recovered, dict_deaths, N
 
 
 
+
+def plot_data_of_locations(position, dict_confirmed, dict_recovered, dict_deaths, Nt=6e7):
+    
+    import matplotlib.ticker as ticker
+    Long, Lat, t_exp, t_exp0, Value_C, Value_R, Value_D = Get_data_of_country(country, dict_confirmed,dict_recovered, dict_deaths)
+    
+
+    my_xticks0=[str(s)  for s in t_exp0.tolist()]
+    #
+    Value_S0= Value_C +Value_R+Value_D
+    Value_N= Nt*np.ones(Value_S0.shape[0])
+    Value_S=Nt-Value_S0
+    
+    plt.subplot(511)
+    plt.plot(t_exp, Value_S, label = country)
+    ax = plt.gca()
+    plt.title('The CVID19 data of '+ country)
+    plt.xticks(rotation=45)
+    plt.ylabel('S(t)')
+    # plt.legend()
+    plt.xticks([])
+    
+    
+    plt.subplot(512)
+    plt.plot(t_exp, Value_C, label = country)
+    ax = plt.gca()
+    plt.xticks(rotation=45)
+    plt.ylabel('I(t)')
+    # plt.legend()
+    plt.xticks([])
+
+
+    plt.subplot(513)
+    plt.plot(t_exp,  Value_R, label = country)
+    plt.xticks(rotation=45)
+    plt.ylabel('R(t)')
+    plt.xticks([])
+    # plt.legend()
+    
+    plt.subplot(514)
+    plt.plot(t_exp, Value_D,  label = country)
+    plt.xticks(rotation=45)
+    plt.ylabel('D(t)')
+    # plt.legend()
+    plt.xticks([])
+
+    
+    plt.subplot(515)
+    plt.xticks(t_exp, my_xticks0)
+
+    plt.plot(t_exp, Value_N,  label = country)
+    plt.xticks(rotation=45)
+    plt.ylabel('N(t)')
+    # plt.legend()
+    # ax = plt.gca()
+
+    plt.locator_params(axis='x', nbins=8)
+    plt.xticks(rotation=45)
+    
+    plt.tight_layout()
+    
+    
+        
+    plt.show()
+    
+    
+    
+
 def plot_fitting_results_country_4s(country, t_exp, S_nz, I_nz, R_nz, D_nz, t, S_hat, I_hat, R_hat, D_hat, t_exp0, filename_rslt):
     
     import matplotlib.ticker as ticker

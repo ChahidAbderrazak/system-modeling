@@ -2,7 +2,7 @@ function [DiffCoef1,beta1,gamma1,delta1,kappa1, varargout] = fit_PDE(I,R,D,S0,ti
 
 %% Inputparseer
 p = inputParser();
-p.CaseSensitive = false;
+p.CaseSensitive = true;
 p.addOptional('tolX',1e-4);  %  option for optimset
 p.addOptional('tolFun',1e-4);  %  option for optimset
 p.addOptional('Display','iter'); % Display option for optimset
@@ -51,6 +51,7 @@ modelFun1 = @SEIQRDP_for_fitting; % transform a nested function into anonymous f
     guess,tTarget(:)',input,zeros(1,numel(guess)),[1 3 1 1 2 3 2 2],options);
 
 
+
 if nargout ==7
     varargout{1} = residual;
 elseif nargout==8
@@ -90,6 +91,14 @@ kappa1 = abs(Coeff(8));
         delta = abs(para(7));
         kappa = abs(para(8));
 
+% %         DiffCoefI=DiffCoefS;
+% %         DiffCoefR=DiffCoefS;
+% %         DiffCoefD=DiffCoefS;
+% 
+% beta=0.5;
+% gamma=0.03;
+% delta=0.0175;
+% kappa=0.4;
 
         %% Initial conditions
         N = numel(t);

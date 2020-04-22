@@ -1,4 +1,4 @@
-function   [time, Sort_Table]=retreive_data_china()
+function   [time, Sort_Table]=retreive_data()
 
 warning ('off','all')
 disp('Data colelcion online. Please wait...!!')        
@@ -7,7 +7,7 @@ disp('Data colelcion online. Please wait...!!')
 [tableConfirmed,tableDeaths,tableRecovered,time] = getDataCOVID();
 % time = time(1:end-1);
 fprintf(['Most recent update: ',datestr(time(end)),'\n'])
-Location = 'China';
+Location = 'China';%'Netherlands';%'France';%
 
 try
     indR = find(contains(tableRecovered.CountryRegion,Location)==1);
@@ -65,7 +65,7 @@ T.CountryRegion=tableRecovered(indR,2);
 T.Deaths=Deaths;
 T.Confirmed=Confirmed;
 T.Recovered=Recovered;
-
-Sort_Table = sortrows(T,'r');
+T.s=sum(T.Deaths+T.Recovered+T.Confirmed,2)
+Sort_Table = sortrows(T,'s');
 end
     

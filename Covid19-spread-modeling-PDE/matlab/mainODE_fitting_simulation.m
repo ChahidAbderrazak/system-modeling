@@ -1,4 +1,4 @@
-addpath function2
+addpath function
 % clear all;close all;clc;
 
 % Time definition

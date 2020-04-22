@@ -1,27 +1,30 @@
-% %% ################################################################
-% %%                      PDE model based on Covid-19 
-% %% ################################################################
-% close all; clear all; clc;
-% addpath function
-% global Xx
-% %%
-% [time, table_data]=retreive_data_china();
-% % position
-% % R, D, I
+%% ################################################################
+%%                      PDE model based on Covid-19 
+%% ################################################################
+close all; clear all; clc;
+addpath function
+global Xx
+%%
+[time, table_data]=retreive_data();
+% position
+% R, D, I
+position=table_data.r;
 R=table_data.Recovered;
 D=table_data.Deaths;
 I=table_data.Confirmed;
-position=table_data.r;
+
 
 %%
-Nt=30e6;
+Nt=3000e6;
 S=Nt-(R+I+D);
 % use small portion of point 
 % 
-% S=S(1:4,:);
-% I=I(1:4,:);
-% R=R(1:4,:);
-% D=D(1:4,:);
+nn=10
+position=position(1:nn,:);
+S=S(1:nn,:);
+I=I(1:nn,:);
+R=R(1:nn,:);
+D=D(1:nn,:);
 %% 
 
 S0=S(:,1);
@@ -32,25 +35,24 @@ X0=[S0 I0 R0 D0];
 
 %% buid the mesh 
 Nx=size(position,1);
-Lx=1.0;
+Lx=10;
 dx=Lx/(Nx-1);
 Xx=0:dx:Lx;
 
 N=size(time,2);
-Tf=360.0;
+Tf=size(time,2);%360.0;
 dt=Tf/(N-1);
 t = [0:N-1].*dt;
 
 %%  fitting of the simulated data   
 DiffCoef0=[0, 0, 0, 0];
-guess = [DiffCoef0, 0.5, 0.5, 0.5, 0.5]; % initial guess
+guess = [DiffCoef0, 1, 1, 1, 1]; % initial guess
 
 [DiffCoef_fit,beta_fit,gamma_fit,delta_fit,kappa_fit] = fit_PDE(I,R,D,S,t,guess);
 
 fit_param=[DiffCoef_fit,beta_fit,gamma_fit,delta_fit,kappa_fit];
 %% 
 [S_fit,I_fit,R_fit,D_fit, N_fit] = SEIQRDP_pde(DiffCoef_fit,beta_fit,gamma_fit,delta_fit,kappa_fit,X0,t);
-
 
 data=[fit_param];
 
@@ -81,10 +83,7 @@ Tt=0:dt:Tf;
     title(strcat('parameters:DiffCoef=[',num2str(DiffCoef_fit(1)),'-',num2str(DiffCoef_fit(2)),'-',num2str(DiffCoef_fit(3)),'-',num2str(DiffCoef_fit(4)),']',...
                  ', beta=',num2str(beta_fit),', gamma=',num2str(gamma_fit),', delta=',num2str(delta_fit),', kappa=',num2str(kappa_fit)))
 
-  
-             
-             
-              
+           
     figure;
     subplot(211)
     mesh(X,Y,I) 

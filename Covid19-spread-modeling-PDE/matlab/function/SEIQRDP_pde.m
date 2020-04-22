@@ -6,6 +6,16 @@ DiffCoefI=DiffCoef(2);
 DiffCoefR=DiffCoef(3);
 DiffCoefD=DiffCoef(4);
 
+% DiffCoefS=0;
+% DiffCoefI=DiffCoefS;
+% DiffCoefR=DiffCoefS;
+% DiffCoefD=DiffCoefS;
+
+% beta=0.5;
+% gamma=0.03;
+% delta=0.0175;
+% kappa=0.4;
+
 
 %% Initial conditions
 N = numel(t);

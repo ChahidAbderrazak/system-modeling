@@ -38,28 +38,26 @@ fit_param=[alpha_fit, beta_fit, gamma_fit, delta_fit, Lambda_fit, Kappa_fit];
 
 %% Compare all states
 
-close all; figure;
-plot(time1,Q,'r',time1,R,'c',time1,D,'g','linewidth',2);
-hold on
-plot(time1,Q_fit,'k-.',time1,R_fit,'k:',time1,D_fit,'k--','linewidth',2);
-% ylim([0,1.1*Npop])
-ylabel('Number of cases')
-xlabel('Time (days)')
-leg = {'Quarantined','Recovered','Dead',...
-       'ODE fitted Quarantined','ODE fitted Recovered','ODE fitted Dead'}
+%%
+Tt=time;
+figure(2)
+subplot(2,2,1)
+plot(Tt,S,'-g',Tt,S_fit,'-.k', 'linewidth',3)
+legend('S(t) Susceptible individials','S(t) fitted' )
+title(Location)
 
-   
-legend(leg{:},'location','eastoutside')
+subplot(2,2,2)
+plot(Tt,I,'-g',Tt,I_fit,'-.k', 'linewidth',3)
+legend('I(t) infected individials','I(t) fitted')
+title(Location)
 
-% ylim([0,1.1*Npop])
-ylabel('Number of cases')
-xlabel('Time (days)')
-leg = {'Tested positive minus the deceased cases','Deceased cases',...
-       'ODE Fitted Tested positive minus the deceased cases','Fitted deceased'};
-       
-legend(leg{:},'location','southoutside')
-set(gcf,'color','w')
-axis tight
+subplot(2,2,3)
+plot(Tt,R,'-r',Tt,R_fit,'-.k', 'linewidth',3)
+legend('R(t) Recovered individials','R(t) fitted')
+title(Location)
+
+
+
 
 
 

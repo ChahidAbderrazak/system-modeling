@@ -111,15 +111,16 @@ def plot_data_of_locations(position, dict_confirmed, dict_recovered, dict_deaths
     Long, Lat, t_exp, t_exp0, Value_C, Value_R, Value_D = Get_data_of_country(country, dict_confirmed,dict_recovered, dict_deaths)
     
 
-    my_xticks0=[str(s)  for s in t_exp0.tolist()]
+   
     #
     Value_S0= Value_C +Value_R+Value_D
     Value_N= Nt*np.ones(Value_S0.shape[0])
     Value_S=Nt-Value_S0
     
+     
+     
     plt.subplot(511)
-    plt.plot(t_exp, Value_S, label = country)
-    ax = plt.gca()
+    plt.plot( t_exp, Value_S+Nt, label = country)
     plt.title('The CVID19 data of '+ country)
     plt.xticks(rotation=45)
     plt.ylabel('S(t)')
@@ -150,7 +151,7 @@ def plot_data_of_locations(position, dict_confirmed, dict_recovered, dict_deaths
     # plt.legend()
     plt.xticks([])
 
-    
+    my_xticks0=[str(s)  for s in t_exp0.tolist()]
     plt.subplot(515)
     plt.xticks(t_exp, my_xticks0)
 
@@ -180,6 +181,7 @@ def plot_fitting_results_country_4s(country, t_exp, S_nz, I_nz, R_nz, D_nz, t, S
     stp=int(t_exp0.shape[0]/Nticks)
     
     s0=t_exp0.shape[0]-stp*Nticks-1
+    
     
     my_xticks0=[str(t_exp0[s])  for s in range(s0,t_exp0.shape[0]+1,stp)]
     

@@ -1,4 +1,4 @@
-function [DiffCoef1,beta1,gamma1,delta1,kappa1, varargout] = fit_PDE(I,R,D,S0,I0,D0, R0,time,guess,varargin)
+function [DiffCoef1, alpha1,beta1,gamma1,delta1,lambda1,kappa1, varargout] = fit_PDE(I,Q,R,D,Npop,E,time,guess,varargin)
 
 %% Inputparseer
 p = inputParser();
@@ -20,14 +20,17 @@ options=optimset('TolX',tolX,'TolFun',tolFun,'MaxFunEvals',800,'Display',Display
 %% Fitting the data
 
 % Write the target input into a matrix
+% I(I<0)=0; % negative values are not possible
 Q(Q<0)=0; % negative values are not possible
 R(R<0)=0; % negative values are not possible
 D(D<0)=0; % negative values are not possible
 
 if isempty(R)
     warning(' No data available for "Recovered" ')
+%     input = [I;Q;D];
     input = [Q;D];
 else
+%     input = [I;Q;R;D];
     input = [Q;R;D];
 end
 
@@ -65,11 +68,17 @@ end
 
 
 %% Write the fitted coeff in the outputs
-DiffCoef1=abs(Coeff(1:4));
-beta1 = abs(Coeff(5));
-gamma1 = abs(Coeff(6));
-delta1 = abs(Coeff(7));
-kappa1 = abs(Coeff(8));
+DiffCoef1=abs(Coeff(1));
+alpha1 = abs(Coeff(2));
+beta1 = abs(Coeff(3));
+gamma1 = abs(Coeff(4));
+delta1 = abs(Coeff(5));
+lambda1 = abs(Coeff(6));
+kappa1 = abs(Coeff(7));
+
+% DiffCoef1=[ abs(Coeff(1)) abs(Coeff(8:13))] ;
+
+
 
 %% nested functions
 
@@ -77,22 +86,46 @@ kappa1 = abs(Coeff(8));
       
  function [output] = SEIQRDP_for_fitting(para,t0)
      
-     
-        DiffCoefS=abs(para(1));
-        DiffCoefI=abs(para(1));
-        DiffCoefR=abs(para(3));
-        DiffCoefD=abs(para(4));
-        beta  = abs(para(5));
-        gamma = abs(para(6));
-        delta = abs(para(7));
-        kappa = abs(para(8));
-
-
+        
+        global Xx
+        DiffCoef=abs(para(1));
+        alpha = abs(para(2));
+        beta = abs(para(3));
+        gamma = abs(para(4));
+        delta = abs(para(5));
+        lambda = abs(para(6));
+        kappa = abs(para(7));
+                
+%         DiffCoefS = abs(para(1));
+%         DiffCoefE = abs(para(8));
+%         DiffCoefI = abs(para(9));
+%         DiffCoefQ = abs(para(10));
+%         DiffCoefR = abs(para(11));
+%         DiffCoefD = abs(para(12));
+%         DiffCoefP = abs(para(13));
+        
         %% Initial conditions
         N = numel(t);
         dt = median(diff(t));
         Nx = numel(Xx);
         dx = median(diff(Xx));
+
+        
+        
+        E_(:,1)=E(:,1);
+        I_(:,1)=I(:,1);
+        Q_(:,1)=Q(:,1);
+        
+        if ~isempty(R)
+            R_(:,1)=R(:,1);
+            S_(:,1)= Npop-Q(:,1)-R(:,1)-D(:,1)-E(:,1)-I(:,1);
+        else
+            S_(:,1)= Npop-Q(:,1)-D(:,1)-E(:,1)-I(:,1);
+              
+        end
+        D_(:,1)=D(:,1);
+        P_(:,1)=0*D_(:,1);
+
 
         %%
         Lambda=1/(dx*dx);
@@ -104,62 +137,51 @@ kappa1 = abs(Coeff(8));
         Matr(1,1)=Matr(1,1)+Lambda;
         Matr(Nx,Nx)=Matr(Nx,Nx)+Lambda;
 
+%%  Simulate the model 
+for i=2:N
+     S_(:,i) = S_(:,i-1) + dt*( -alpha*S_(:,i-1) - (beta./Npop).*I_(:,i-1).*S_(:,i-1))  + dt*DiffCoef*Matr*S_(:,i-1);
+     E_(:,i) = E_(:,i-1) + dt*( -gamma*E_(:,i-1) + (beta./Npop).*I_(:,i-1).*S_(:,i-1))  + dt*DiffCoef*Matr*E_(:,i-1);
+     I_(:,i) = I_(:,i-1) + dt*( gamma*E_(:,i-1) - delta.*I_(:,i-1))                     + dt*DiffCoef*Matr*I_(:,i-1);
+     Q_(:,i) = Q_(:,i-1) + dt*(  delta.*I_(:,i-1) -lambda*Q_(:,i-1) - kappa.*Q_(:,i-1)) + dt*DiffCoef*Matr*Q_(:,i-1);
+     R_(:,i) = R_(:,i-1) + dt*(lambda)*Q_(:,i-1)                                        + dt*DiffCoef*Matr*R_(:,i-1);
+     D_(:,i) = D_(:,i-1) + dt*(kappa)*Q_(:,i-1)                                         + dt*DiffCoef*Matr*D_(:,i-1);
+     P_(:,i) = P_(:,i-1) + dt*(alpha)*S_(:,i-1)                                         + dt*DiffCoef*Matr*P_(:,i-1);
+            
+            
+            
+%             
+%             
+%             
+%      S_(:,i) = S_(:,i-1) + dt*( -alpha*S_(:,i-1) - (beta./Npop).*I_(:,i-1).*S_(:,i-1))  + dt*DiffCoefS*Matr*S_(:,i-1);
+%      E_(:,i) = E_(:,i-1) + dt*( -gamma*E_(:,i-1) + (beta./Npop).*I_(:,i-1).*S_(:,i-1))  + dt*DiffCoefE*Matr*E_(:,i-1);
+%      I_(:,i) = I_(:,i-1) + dt*( gamma*E_(:,i-1) - delta.*I_(:,i-1))                     + dt*DiffCoefI*Matr*I_(:,i-1);
+%      Q_(:,i) = Q_(:,i-1) + dt*(  delta.*I_(:,i-1) -lambda*Q_(:,i-1) - kappa.*Q_(:,i-1)) + dt*DiffCoefQ*Matr*Q_(:,i-1);
+%      R_(:,i) = R_(:,i-1) + dt*(lambda)*Q_(:,i-1)                                        + dt*DiffCoefR*Matr*R_(:,i-1);
+%      D_(:,i) = D_(:,i-1) + dt*(kappa)*Q_(:,i-1)                                         + dt*DiffCoefD*Matr*D_(:,i-1);
+%      P_(:,i) = P_(:,i-1) + dt*(alpha)*S_(:,i-1)                                         + dt*DiffCoefP*Matr*P_(:,i-1);
+ end 
+                                   
 
-        % lambda = lambda0(1)*(1-exp(-lambda0(2).*t)); % I use these functions for illustrative purpose only
-        % kappa = kappa0(1)*exp(-kappa0(2).*t); % I use these functions for illustrative purpose only
-
-        I(:,1)=I0;
-        R(:,1)=R0;
-        D(:,1)=D0;
-        S(:,1)=S0;
-
-
-        Nn=Sn+In+Rn+Dn;
-
-        for i=2:N
-            %%  ================================================================================== 
-            S(:,i)=S(:,i-1) + dt*DiffCoefS*Matr*S(:,i-1)  - dt*(1./N(:,i-1))*beta*(1-kappa).*S(:,i-1).*In(:,i-1);
-
-            %% ================================================================ 
-
-            In(:,i)=In(:,i-1)  + dt*DiffCoefI*Matr*In(:,i-1) + dt*(1./Nn(:,i-1))*beta*(1-kappa).*Sn(:,i-1).*In(:,i-1) -dt*gamma*(1-delta)*In(:,i-1)-dt*delta*In(:,i-1) ;
-
-
-            %% ================================================================ 
-
-            Rn(:,i)=Rn(:,i-1)  +dt*DiffCoefR*Matr*Rn(:,i-1) + dt*gamma*(1-delta)*In(:,i-1);
-
-            %% ================================================================ 
-
-            Dn(:,i)=Dn(:,i-1) +dt*DiffCoefD*Matr*Dn(:,i-1) + dt*delta*In(:,i-1);
-
-
-            Nn(:,i)=Sn(:,i)+In(:,i)+Rn(:,i)+Dn(:,i);
-
-
-        end
         
-                
-                
-%         I1 = Y(3,1:N);
-        I1 = Q_;
-        R1 = R_;
-        D1 = D_;
+        [Xq,Yq] = meshgrid(time,Xx);
+        [X,Y] = meshgrid(t,Xx);
         
-        I1 = interp1(t,I1,t0);
-        R1 = interp1(t,R1,t0);
-        D1 = interp1(t,D1,t0);
-        
+%         I1 = interp2(X,Y,I_,Xq,Yq);
+        Q1 = interp2(X,Y,Q_,Xq,Yq);
+        R1 = interp2(X,Y,R_,Xq,Yq);
+        D1 = interp2(X,Y,D_,Xq,Yq);
         
         if ~isempty(R)
-            output = [I1;R1;D1];
+%             output = [I1;Q1;R1;D1];
+            output = [Q1;R1;D1];
+
         else
-            output = [I1+R1;D1];
+%             output = [I1;Q1+R1;D1];
+            output = [Q1+R1;D1];
+
         end
 
  end
 
 end
-
-
 

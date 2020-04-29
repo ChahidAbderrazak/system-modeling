@@ -69,8 +69,8 @@ alpha1 = abs(Coeff(1));
 beta1 = abs(Coeff(2));
 gamma1 = abs(Coeff(3));
 delta1 = abs(Coeff(4));
-Lambda1 = abs(Coeff(5:6));
-Kappa1 = abs(Coeff(7:8));
+Lambda1 = abs(Coeff(5));
+Kappa1 = abs(Coeff(6));
 
 
 %% nested functions
@@ -83,20 +83,27 @@ Kappa1 = abs(Coeff(7:8));
         beta = abs(para(2));
         gamma = abs(para(3));
         delta = abs(para(4));
-        lambda0 = abs(para(5:6));    lambda = lambda0(1)*(1-exp(-lambda0(2).*t)); % I use these functions for illustrative purpose only
-        kappa0 = abs(para(7:8));     kappa = kappa0(1)*exp(-kappa0(2).*t);
+        lambda = abs(para(5));
+        kappa = abs(para(6));
+        
+                
+%         lambda0 = abs(para(5:6));    lambda = lambda0(1)*(1-exp(-lambda0(2).*t)); % I use these functions for illustrative purpose only
+%         kappa0 = abs(para(7:8));     kappa = kappa0(1)*exp(-kappa0(2).*t);
         %% Initial conditions
         N = numel(t);
         
-        E_(1)=E0;
-        I_(1)=I0;
+        
+        
+        
+        E_(1)=E0(1);
+        I_(1)=I0(1);
         Q_(1)=Q(1);
         
         if ~isempty(R)
             R_(1)=R(1);
-            S_(1)= Npop-Q(1)-R(1)-D(1)-E0-I0;
+            S_(1)= Npop-Q(1)-R(1)-D(1)-E0(1)-I0(1);
         else
-            S_(1)= Npop-Q(1)-D(1)-E0-I0;
+            S_(1)= Npop-Q(1)-D(1)-E0(1)-I0(1);
               
         end
         D_(1)=D(1);
@@ -108,16 +115,14 @@ Kappa1 = abs(Coeff(7:8));
 
         
         for i=2:N
-           
-             S_(i) = S_(i-1)  + dt*( -alpha*S_(i-1) - (beta./Npop).*I_(i-1)*S_(i-1)) ;
-             E_(i) = E_(i-1) + dt*( -gamma*E_(i-1) + (beta./Npop).*I_(i-1)*S_(i-1));
-             I_(i) = I_(i-1)  + dt*( gamma*E_(i-1) - delta.*I_(i-1))  ;
-             Q_(i) = Q_(i-1) + dt*(  delta.*I_(i-1) -lambda(i-1)*Q_(i-1) - kappa(i-1).*Q_(i-1)) ;
 
-             R_(i)= R_(i-1) + (dt)*(lambda(i-1))*Q_(i-1);
-             D_(i)= D_(i-1) + (dt)*(kappa(i-1))*Q_(i-1);
-             P_(i)= P_(i-1) + (dt)*(alpha)*S_(i-1);
-
+            S_(i) = S_(i-1)  + dt*( -alpha*S_(i-1) - (beta./Npop).*I_(i-1).*S_(i-1)) ;
+            E_(i) = E_(i-1)  + dt*( -gamma*E_(i-1) + (beta./Npop).*I_(i-1).*S_(i-1));
+            I_(i) = I_(i-1)  + dt*( gamma*E_(i-1) - delta.*I_(i-1))  ;
+            Q_(i) = Q_(i-1)  + dt*(  delta.*I_(i-1) -lambda*Q_(i-1) - kappa.*Q_(i-1)) ;
+            R_(i) = R_(i-1)  + dt*(lambda)*Q_(i-1);
+            D_(i) = D_(i-1)  + dt*(kappa)*Q_(i-1);
+            P_(i) = P_(i-1)  + dt*(alpha)*S_(i-1);
 
         end
         
